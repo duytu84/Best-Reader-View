@@ -1,22 +1,4 @@
-// Nạp các thư viện Firebase đã tải về vào service worker
-importScripts('firebase_sdk/firebase-app.js');
-importScripts('firebase_sdk/firebase-auth.js');
-
 'use strict';
-
-// GHI CHÚ: Các tính năng nâng cao (đăng nhập, feedback) cần được cấu hình Firebase.
-// Nếu bạn có các thông tin này, hãy điền vào đây. Nếu không, các tính năng cốt lõi vẫn hoạt động.
-/*
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-firebase.initializeApp(firebaseConfig);
-*/
 
 var possibleArticle = {};
 
@@ -78,7 +60,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true; // Bắt buộc phải có để giữ kênh message mở cho sendResponse bất đồng bộ
   }
-  // Các loại message khác có thể được thêm vào đây
 });
 
 function getAuthToken(callback) {
