@@ -1,1 +1,86 @@
-var e=0,n=1e3;const t="onboarding_shown_key";function o(e,n,t){return`<div class='website row separator'>\n            <div class='row'>\n                <img src='${e}' />\n                <div class='website-name'>\n                ${n}\n                </div>\n            </div>\n            <button id="${t}">\n                Remove\n            </button>\n        </div>`}function i(){const e=document.getElementById("no-site-configed"),n=document.getElementById("configured-websites");n.innerHTML="",chrome.storage.sync.get([AUTO_READER_KEY],function(t){if(t&&t[AUTO_READER_KEY]&&t[AUTO_READER_KEY].length>0){const d=t[AUTO_READER_KEY];for(var i=0;i<d.length;i++){const e=d[i],t=document.createElement("div"),c="chrome://favicon/https://"+e,l="button-1-"+e;t.innerHTML=o(c,e,l),n.appendChild(t),document.getElementById(l).addEventListener("click",s)}e.style.display="none",n.style.display="block"}else e.style.display="block",n.style.display="none"})}function s(e){e.target.id;const n=e.target.id.replace("button-1-","");setWebsiteToAutoReader(n,!1,function(){i()})}function d(){const e=document.getElementById("no-always-configed"),n=document.getElementById("always-reader-websites");n.innerHTML="",chrome.storage.sync.get([ALWAYS_START_READER_KEY],function(t){if(t&&t[ALWAYS_START_READER_KEY]&&t[ALWAYS_START_READER_KEY].length>0){const s=t[ALWAYS_START_READER_KEY];for(var i=0;i<s.length;i++){const e=s[i],t=document.createElement("div"),d="chrome://favicon/https://"+e,l="button-2-"+e;t.innerHTML=o(d,e,l),n.appendChild(t),document.getElementById(l).addEventListener("click",c)}e.style.display="none",n.style.display="block"}else e.style.display="block",n.style.display="none"})}function c(e){e.target.id;const n=e.target.id.replace("button-2-","");setWebsiteToAlwaysStartReader(n,!1,function(){d()})}function l(e){e.target.id;const n=e.target.id.replace("button-","");window.open(n,"_blank").focus()}function a(e){e?(document.getElementById("not-signedin").style.display="none",document.getElementById("dropdown-container").style.display="block",e.isAnonymous||(document.getElementById("username").innerText=e.email)):(document.getElementById("not-signedin").style.display="block",document.getElementById("dropdown-container").style.display="none")}function r(t){t.stopPropagation(),showSigninModal(function(t){"guest"==t.status?(n=500,e=20,u()):"google"==t.status&&(n=1e3,e=30,u())})}function u(){e>0&&setTimeout(()=>{e--,chrome.runtime.sendMessage({fromTOS:!0,type:"getCurrentUser"},function(n){if(n&&n.currentUser){e=0,a(n.currentUser)}else u()})},n)}function g(e){e.stopPropagation(),document.getElementById("signin-dropdown").style.display="block"}function m(e){e.stopPropagation(),document.getElementById("signin-dropdown").style.display="none",chrome.runtime.sendMessage({fromTOS:!0,type:"signout"},function(e){a()})}function y(){var e="mailto:readerview.extension@gmail.com?subject="+escape("Hello Best Reader");window.location.href=e}document.addEventListener("DOMContentLoaded",function(){chrome.tabs.query({active:!0,currentWindow:!0},function(e){e[0],e[0].url}),a(),e=1,n=10,u(),i(),d(),function(){const e=document.getElementById("no-highlight-note"),n=document.getElementById("Highlights-Notes");n.innerHTML="",fetchNoteHighlightedUrls(function(t){if(Object.keys(t).length<1)n.style.display="none",e.style.display="block";else{n.style.display="block",e.style.display="none";for(let[e,o]of Object.entries(t)){const t=document.createElement("div"),i="chrome://favicon/"+e;t.innerHTML=`<div class='website row separator'>\n            <div class='row'>\n                <img src='${i}' />\n                <div class='website-name'>\n                ${o}\n                </div>\n            </div>\n            <button id="button-${e}">\n                &nbsp;go&nbsp;\n            </button>\n        </div>`,n.appendChild(t),document.getElementById(`button-${e}`).addEventListener("click",l)}}})}(),chrome.storage.sync.get([t],function(e){e&&e[t]||(showOnboardingModal(),chrome.storage.sync.set({[t]:1},function(){}))}),document.getElementById("logout").addEventListener("click",m,!0),document.getElementById("not-signedin").addEventListener("click",r,!0),document.getElementById("signedin").addEventListener("click",g,!0),document.getElementById("contact").addEventListener("click",y,!0),updateRadiosFromSettings();var o=document.changeButtonColor.radios;for(let e=0;e<o.length;e++)o[e].addEventListener("change",function(){saveNewRadiosSettings(o.value)})}),window.onclick=function(e){e.target.matches(".dropbtn")||(document.getElementById("signin-dropdown").style.display="none")};
+// Nội dung MỚI cho options.js
+var config = {};
+var websites = [];
+
+document.getElementById('save').addEventListener('click', save);
+
+chrome.storage.sync.get(['config', 'websites'], function (result) {
+    if (result) {
+        if (result.config) {
+            config = result.config;
+            document.getElementById(`theme-${result.config.theme}`).checked = true;
+            document.getElementById(`font-${result.config.font}`).checked = true;
+            document.getElementById('zoom-range').value = result.config.zoom;
+            document.getElementById('zoom-value').innerText = result.config.zoom;
+        } else {
+            document.getElementById('theme-light').checked = true;
+            document.getElementById('font-sans').checked = true;
+            document.getElementById('zoom-range').value = 1;
+            document.getElementById('zoom-value').innerText = '1';
+        }
+
+        // --- ĐOẠN MÃ ĐÃ ĐƯỢC SỬA Ở ĐÂY ---
+        // Hàm cũ chrome.tabs.getSelected đã bị xóa bỏ
+        // Thay thế bằng chrome.tabs.query
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            var tab = tabs[0]; // Lấy tab hiện tại từ mảng kết quả
+            if (tab) {
+                var url = new URL(tab.url);
+                var hostname = url.hostname;
+                document.getElementById('current-site-value').innerText = hostname;
+                if (result.websites) {
+                    websites = result.websites;
+                    websites.forEach(website => {
+                        var checkbox = document.getElementById(`website-${website.mode}`);
+                        if (website.hostname == hostname) {
+                            checkbox.checked = true;
+                        } else {
+                            // checkbox.checked = false; // This logic might be flawed if multiple sites exist
+                        }
+                    });
+                }
+            }
+        });
+        // --- KẾT THÚC ĐOẠN MÃ ĐÃ SỬA ---
+    }
+});
+
+
+function save() {
+    var radios = document.getElementsByTagName('input');
+    var value;
+    for (var i = 0; i < radios.length; i++) {
+        if (radios[i].type === 'radio' && radios[i].checked) {
+            if (radios[i].name == 'theme') {
+                config.theme = radios[i].value;
+            } else if (radios[i].name == 'font') {
+                config.font = radios[i].value;
+            } else if (radios[i].name == 'website') {
+
+                var url = new URL(document.getElementById('current-site-value').innerText);
+                var hostname = "https://" + url.hostname;
+                var hostname = (new URL(hostname)).hostname;
+
+                websites = websites.filter(w => w.hostname != hostname);
+                if (radios[i].value != 'normal') {
+                    websites.push({
+                        hostname: hostname,
+                        mode: radios[i].value,
+                    });
+                }
+            }
+        }
+    }
+
+    config.zoom = document.getElementById('zoom-range').value;
+
+    chrome.storage.sync.set({ 'config': config }, function () {
+    });
+
+    chrome.storage.sync.set({ 'websites': websites }, function () {
+    });
+}
+
+document.getElementById('zoom-range').addEventListener('input', function (evt) {
+    document.getElementById('zoom-value').innerText = this.value;
+});
