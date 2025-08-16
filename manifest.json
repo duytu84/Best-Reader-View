@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "name": "Best Reader View",
+  "short_name": "Reader",
+  "version": "1.2.7",
+  "description": "Tired of cluttered web pages full of commericals? Best Reader View cleans all up and renders the only main article of the page!",
+  
+  // Ghi chú: Quyền "chrome://favicon/" không còn hoạt động trong V3.
+  // Bạn sẽ cần dùng API chrome.runtime.getURL() hoặc các phương pháp khác.
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  
+  // Ghi chú: Đã chuyển từ background page sang service worker.
+  // Bạn cần tạo file background.js chứa logic từ file background.html cũ.
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  // Ghi chú: "browser_action" đã được đổi tên thành "action".
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Best Reader View",
+    "default_icon": {
+      "32": "images/icon-text-32-2.png",
+      "64": "images/icon-text-64-2.png"
+    }
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "minis/Readability.min.js",
+        "minis/Readability-readerable.min.js",
+        "minis/yamd5.min.js",
+        "images/svgs.js",
+        "auto-reader.js",
+        "always-start-reader.js",
+        "note-highlight-store.js",
+        "signin.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css",
+        "signin.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  // Ghi chú: Cú pháp của "web_accessible_resources" đã thay đổi.
+  "web_accessible_resources": [
+    {
+      "resources": [ "images/*.png" ],
+      "matches": [ "*://*/*" ]
+    }
+  ],
+  
+  "options_page": "options.html",
+  "icons": {
+    "32": "images/icon-text-32.png",
+    "64": "images/icon-text-64.png",
+    "128": "images/icon-store-128.png"
+  }
+  
+  // Ghi chú: "content_security_policy", "oauth2" và "key" đã bị loại bỏ.
+  // Việc xác thực OAuth2 trong V3 cần được thực hiện bằng API chrome.identity.
+  // Bạn sẽ phải viết lại logic đăng nhập.
+}
